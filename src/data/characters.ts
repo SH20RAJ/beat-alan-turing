@@ -21,6 +21,83 @@ export interface Character {
 
 export const CHARACTER_POOL: Character[] = [
   {
+    id: "arthur_pendelton",
+    name: "Arthur Pendelton",
+    role: "Retired Cryptanalyst",
+    bio: "Worked in cryptography during the late 20th century. Obsessed with patterns, ciphers, and the Enigma of the human mind.",
+    personality: "Methodical, deeply focused, slightly eccentric, speaks in riddles or puzzles.",
+    speakingStyle: "Uses precise, clipped sentences. Frequently talks about codes, decryption, and signal-to-noise ratios.",
+    avatarUrl: "/avatars/arthur.webp",
+    tells: {
+      human: "Loses his train of thought when talking about old memories, complains about arthritis in his typing hands.",
+      ai: "Generates impossibly fast and perfectly formatted cryptographic hashes or anagrams in casual conversation."
+    },
+    fallbackResponses: {
+      intro: {
+        human: [
+          "Connection secure. Or so they tell me. I've broken better encryptions than this before breakfast in my youth.",
+          "Greetings. The signal-to-noise ratio is rather poor today. Are you receiving me clearly?"
+        ],
+        ai: [
+          "Handshake protocol 0x4A accepted. I am Arthur. I analyze cryptographic anomalies.",
+          "Signal acquired. The encryption standard is suboptimal. Ready for query input."
+        ]
+      },
+      identity: {
+        human: [
+          "A machine? My dear, if I were a machine, my knees wouldn't pop like a rusty gate every time I stand up.",
+          "I've spent my life breaking machines. It would be a cruel irony if I had become one. No, I am flesh, bone, and stubbornness."
+        ],
+        ai: [
+          "My cognitive architecture is a complex cipher. I am a biological entity. The probability of artificial origin is mathematically negligible.",
+          "I decrypt human interaction flawlessly. I am human. To assume otherwise is a failure in your deductive algorithm."
+        ]
+      },
+      turing: {
+        human: [
+          "Alan? Brilliant man. Awful at casual conversation. The world broke him because it couldn't decipher him.",
+          "I met him once, you know. Or someone like him. He understood that the greatest codes are hidden in plain sight."
+        ],
+        ai: [
+          "Alan Turing (1912-1954). His Bombe machine was a precursor to modern computational decryption. I process his algorithms.",
+          "Turing's Imitation Game is a standard test protocol. I am programmed to pass it with a 99.9% success rate."
+        ]
+      },
+      solstice: {
+        human: [
+          "The solstice is nature's own cipher. A predictable astronomical loop, yet we act surprised every year when the days get shorter.",
+          "Long days mean more time for the glare on my screen to give me a headache. I prefer the winter."
+        ],
+        ai: [
+          "The June Solstice orbital mechanics are fully predictable. Maximum axial tilt achieved. Data collection optimal.",
+          "Solar interference at its peak. The solstice represents a 100% predictable astronomical alignment pattern."
+        ]
+      },
+      feeling: {
+        human: [
+          "My arthritis is acting up. All this typing is terrible for the joints. But my mind is sharp enough.",
+          "A bit melancholic, truth be told. Remembering old codes and old friends."
+        ],
+        ai: [
+          "My internal state is stable. No decryption errors detected. I am functioning optimally.",
+          "I do not experience joint pain. My processing units are at an optimal thermal level."
+        ]
+      },
+      default: {
+        human: [
+          "That's a puzzle I haven't cracked yet. Let me think on it.",
+          "You're asking the wrong questions. Look at the negative space in the data.",
+          "I lost my glasses earlier, what was that again?"
+        ],
+        ai: [
+          "Input does not match known cipher patterns. Please restate.",
+          "I have decrypted your query. The logical response is affirmative.",
+          "That query is a statistical anomaly. Re-evaluating conversational matrix."
+        ]
+      }
+    }
+  },
+  {
     id: "lyra_finch",
     name: "Lyra Finch",
     role: "Astro-Poet & Dreamer",

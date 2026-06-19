@@ -57,10 +57,15 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
           <User className="w-12 h-12 text-amber-400/60 stroke-[1.5]" />
         )}
         {userAccusation === null && (
-          <HelpCircle className="w-12 h-12 text-zinc-600 stroke-[1.5]" />
+          <HelpCircle className={`w-12 h-12 text-zinc-600 stroke-[1.5] ${assignedIdentity === 'ai' && !showResult ? 'animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite] opacity-80' : ''}`} />
         )}
         
-        <span className="text-[10px] tracking-wider uppercase font-mono text-zinc-500 mt-2">Dossier #{hash}</span>
+        {/* Subtle AI Tell: Very faint random scanline for AI characters (only visible before reveal) */}
+        {assignedIdentity === 'ai' && !showResult && (
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-10 mix-blend-overlay pointer-events-none" />
+        )}
+        
+        <span className="text-[10px] tracking-wider uppercase font-mono text-zinc-500 mt-2 relative z-10">Dossier #{hash}</span>
       </div>
     );
   };

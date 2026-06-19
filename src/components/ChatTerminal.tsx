@@ -12,6 +12,7 @@ export const ChatTerminal: React.FC = () => {
     roundCharacters, 
     chatHistories, 
     sendMessage, 
+    analyzeCognitiveSignature,
     isThinking, 
     questionsLeft,
     isGeminiActive
@@ -22,6 +23,48 @@ export const ChatTerminal: React.FC = () => {
   
   const activeRoundChar = roundCharacters.find(rc => rc.character.id === activeCharacterId);
   const messages = activeCharacterId ? chatHistories[activeCharacterId] || [] : [];
+
+  // ScrambleText component for the decryption effect
+  const ScrambleText = ({ text, isSystem }: { text: string, isSystem: boolean }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [isDecrypting, setIsDecrypting] = useState(true);
+    const chars = '!<>-_\\\\/[]{}—=+*^?#________';
+
+    useEffect(() => {
+      let iteration = 0;
+      let animationFrameId: number;
+      const totalIterations = isSystem ? 15 : 30; // System messages decrypt faster
+
+      const animate = () => {
+        setDisplayText(
+          text.split('').map((letter, index) => {
+            if (index < iteration) {
+              return letter;
+            }
+            return chars[Math.floor(Math.random() * chars.length)];
+          }).join('')
+        );
+
+        if (iteration >= text.length) {
+          setIsDecrypting(false);
+          return;
+        }
+
+        iteration += text.length / totalIterations;
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animate();
+
+      return () => cancelAnimationFrame(animationFrameId);
+    }, [text, isSystem]);
+
+    return (
+      <span className={isDecrypting ? 'opacity-70 blur-[0.3px]' : ''}>
+        {displayText}
+      </span>
+    );
+  };
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -72,11 +115,21 @@ export const ChatTerminal: React.FC = () => {
               <Network className="w-3 h-3" />
               {isGeminiActive ? 'Gemini AI Core' : 'Cognitive Simulator'}
             </span>
+            <button
+              onClick={analyzeCognitiveSignature}
+              disabled={isThinking || questionsLeft < 2 || messages.length === 0}
+              className="bg-indigo-950/40 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-900 hover:text-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded text-[10px] font-mono uppercase transition-colors flex items-center gap-1"
+              title="Spend 2 transmissions to decrypt a cognitive signature hint"
+            >
+              Analyze Signature (-2)
+            </button>
           </div>
         </div>
 
         {/* Message Log */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 scroll-smooth relative">
+          {/* CRT Scanline Overlay */}
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-10 opacity-30 mix-blend-overlay"></div>
           <AnimatePresence initial={false}>
             {messages.map((msg, index) => {
               const isUser = msg.role === 'user';
@@ -99,7 +152,9 @@ export const ChatTerminal: React.FC = () => {
                       <span>{msg.timestamp}</span>
                     </div>
                     {/* Message Body */}
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className="whitespace-pre-wrap relative z-20">
+                      {isUser ? msg.content : <ScrambleText text={msg.content} isSystem={msg.content.startsWith('[SYSTEM')} />}
+                    </p>
                   </div>
                 </motion.div>
               );

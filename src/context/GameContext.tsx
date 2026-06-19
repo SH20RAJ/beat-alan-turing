@@ -38,6 +38,7 @@ interface GameContextType {
   startRound: () => void;
   selectCharacter: (id: string) => void;
   sendMessage: (content: string) => Promise<void>;
+  analyzeCognitiveSignature: () => Promise<void>;
   setUserAccusation: (characterId: string, status: 'human' | 'ai' | null) => void;
   updateNotes: (characterId: string, notes: string) => void;
   submitJudgement: () => void;
@@ -134,20 +135,49 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const selectCharacter = (id: string) => {
     setActiveCharacterId(id);
+    setScreen('chat');
     
     // Generate introduction if no chat history exists
     if (chatHistories[id]?.length === 0) {
       const rc = roundCharacters.find(c => c.character.id === id);
       if (rc) {
         setIsThinking(true);
-        setTimeout(() => {
-          const introMsg = generateSimulatedResponse(rc.character, rc.assignedIdentity, [], 'hello');
-          setChatHistories(prev => ({
-            ...prev,
-            [id]: [{ role: 'assistant', content: introMsg, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
-          }));
-          setIsThinking(false);
-        }, 800);
+        // Use Gemini if available for intro too
+        if (isGeminiActive) {
+          fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              character: rc.character,
+              assignedIdentity: rc.assignedIdentity,
+              history: [],
+              newMessage: 'The player has just entered your chat terminal. Introduce yourself briefly.'
+            })
+          }).then(res => res.ok ? res.json() : null).then(data => {
+            const introMsg = data?.reply || generateSimulatedResponse(rc.character, rc.assignedIdentity, [], 'hello');
+            setChatHistories(prev => ({
+              ...prev,
+              [id]: [{ role: 'assistant', content: introMsg, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+            }));
+            setIsThinking(false);
+          }).catch(() => {
+            const introMsg = generateSimulatedResponse(rc.character, rc.assignedIdentity, [], 'hello');
+            setChatHistories(prev => ({
+              ...prev,
+              [id]: [{ role: 'assistant', content: introMsg, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+            }));
+            setIsThinking(false);
+          });
+        } else {
+          setTimeout(() => {
+            const introMsg = generateSimulatedResponse(rc.character, rc.assignedIdentity, [], 'hello');
+            setChatHistories(prev => ({
+              ...prev,
+              [id]: [{ role: 'assistant', content: introMsg, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+            }));
+            setIsThinking(false);
+          }, 800);
+        }
       }
     }
   };
@@ -206,6 +236,59 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setChatHistories(prev => ({
       ...prev,
       [activeCharacterId]: [...updatedHistory, { role: 'assistant', content: reply, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]
+    }));
+    setIsThinking(false);
+  };
+
+  const analyzeCognitiveSignature = async () => {
+    if (!activeCharacterId || questionsLeft < 2 || isThinking) return;
+
+    const currentHistory = chatHistories[activeCharacterId] || [];
+    if (currentHistory.length === 0) return;
+
+    setQuestionsLeft(prev => prev - 2);
+    setIsThinking(true);
+
+    const rc = roundCharacters.find(c => c.character.id === activeCharacterId);
+    if (!rc) return;
+
+    let analysisText = '';
+
+    if (isGeminiActive) {
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            character: rc.character,
+            assignedIdentity: rc.assignedIdentity,
+            history: currentHistory.map(m => ({ role: m.role, content: m.content }))
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          analysisText = data.analysis;
+        } else {
+          analysisText = "[SYSTEM ERROR] Cognitive trace analysis failed. Fallback heuristic: Inconclusive.";
+        }
+      } catch (err) {
+        analysisText = "[SYSTEM ERROR] Decryption link severed.";
+      }
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      analysisText = "[SIMULATOR WARNING] Live API offline. Fallback analysis: " + 
+        (rc.assignedIdentity === 'ai' 
+          ? "Syntax patterns indicate a 73% probability of artificial generation." 
+          : "Emotional variance detected. Biological origin likely.");
+    }
+
+    setChatHistories(prev => ({
+      ...prev,
+      [activeCharacterId]: [
+        ...currentHistory,
+        { role: 'assistant', content: `[SYSTEM ANALYSIS: ${analysisText}]`, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+      ]
     }));
     setIsThinking(false);
   };
@@ -306,6 +389,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       startRound,
       selectCharacter,
       sendMessage,
+      analyzeCognitiveSignature,
       setUserAccusation,
       updateNotes,
       submitJudgement,

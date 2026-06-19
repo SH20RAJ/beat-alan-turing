@@ -31,7 +31,9 @@ export default function Home() {
     streak,
     highScore,
     questionsLeft,
+    activeCharacterId,
     roundCharacters,
+    chatHistories,
     startGame,
     submitJudgement,
     nextRound,
@@ -237,6 +239,7 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
                       key={rc.character.id}
                       charId={rc.character.id}
                       isSelectable={true}
+                      isActive={rc.character.id === activeCharacterId}
                     />
                   ))}
                 </div>
@@ -285,16 +288,48 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
               exit={{ opacity: 0 }}
               className="flex flex-col space-y-4"
             >
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setScreen('lobby')}
-                  className="text-xs font-mono text-zinc-400 hover:text-zinc-100 flex items-center gap-1.5 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  [Return to Dossier Grid]
-                </button>
-                <div className="font-mono text-xs text-zinc-400">
-                  Transmissions remaining: <span className="font-bold text-amber-400">{questionsLeft}</span>
+              {/* Top Bar: Navigation + Character Switcher + Turns */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setScreen('lobby')}
+                    className="text-xs font-mono text-zinc-400 hover:text-zinc-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    [Return to Dossier Grid]
+                  </button>
+                  <div className="font-mono text-xs text-zinc-400">
+                    Transmissions remaining: <span className="font-bold text-amber-400">{questionsLeft}</span>
+                  </div>
+                </div>
+
+                {/* Character Quick-Switch Tabs */}
+                <div className="flex gap-2">
+                  {roundCharacters.map((rc) => {
+                    const isCurrentlyActive = rc.character.id === activeCharacterId;
+                    const hasMessages = (chatHistories[rc.character.id] || []).length > 0;
+                    return (
+                      <button
+                        key={rc.character.id}
+                        onClick={() => selectCharacter(rc.character.id)}
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-mono transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border ${
+                          isCurrentlyActive
+                            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold'
+                            : 'bg-zinc-900/60 border-zinc-800/60 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+                        }`}
+                      >
+                        {hasMessages && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        <span className="truncate">{rc.character.name.split(' ')[0]}</span>
+                        {rc.userAccusation && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                            rc.userAccusation === 'ai' ? 'bg-indigo-950 text-indigo-400' : 'bg-amber-950 text-amber-400'
+                          }`}>
+                            {rc.userAccusation.toUpperCase()}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
