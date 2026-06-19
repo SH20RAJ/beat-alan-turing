@@ -21,11 +21,13 @@ import {
   Network,
   Cpu,
   User,
-  Heart
+  Heart,
+  Brain
 } from 'lucide-react';
-import { useGame } from '../context/GameContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
-import { CharacterCard } from '../components/CharacterCard';
+
+export default function Home() {
   const {
     screen,
     round,
