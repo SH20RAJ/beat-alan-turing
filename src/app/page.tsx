@@ -15,15 +15,17 @@ import {
   RotateCcw, 
   Trophy, 
   Flame, 
+  Volume2,
+  VolumeX,
   ShieldAlert, 
   Network,
   Cpu,
   User,
   Heart
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-export default function Home() {
+import { useGame } from '../context/GameContext';
+import { useSound } from '../context/SoundContext';
+import { CharacterCard } from '../components/CharacterCard';
   const {
     screen,
     round,
@@ -34,6 +36,7 @@ export default function Home() {
     activeCharacterId,
     roundCharacters,
     chatHistories,
+    evaluationText,
     startGame,
     submitJudgement,
     nextRound,
@@ -41,6 +44,8 @@ export default function Home() {
     selectCharacter,
     setScreen,
   } = useGame();
+
+  const { isMuted, toggleMute, playKeyClick, setDroneIntensity } = useSound();
 
   // Story Screen local typewriter effect
   const storyText = `ON THIS, THE JUNE SOLSTICE, THE SUN REACHES ITS HIGHEST ZENITH, YET ITS LIGHT CASTS THE LONGEST SHADOWS.
@@ -65,13 +70,25 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
 
   useEffect(() => {
     if (screen === 'story' && typingIndex < storyText.length) {
-      const interval = setTimeout(() => {
+      const timeout = setTimeout(() => {
         setStoryTyped(prev => prev + storyText[typingIndex]);
         setTypingIndex(prev => prev + 1);
-      }, 15); // Fast typing speed
-      return () => clearTimeout(interval);
+        // Play keyboard click sound occasionally for the story text
+        if (typingIndex % 3 === 0) playKeyClick();
+      }, 20 + Math.random() * 30);
+      return () => clearTimeout(timeout);
     }
   }, [screen, typingIndex, storyText]);
+
+  // Adjust drone intensity based on questions left
+  useEffect(() => {
+    if (screen === 'chat') {
+      const intensity = 1 - (questionsLeft / 10);
+      setDroneIntensity(intensity);
+    } else {
+      setDroneIntensity(0);
+    }
+  }, [questionsLeft, screen, setDroneIntensity]);
 
   // Check if player has made an accusation for all 3 characters
   const isJudgementReady = roundCharacters.every(rc => rc.userAccusation !== null);
@@ -115,7 +132,14 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
               <span className="text-[10px] text-zinc-500 uppercase">Streak:</span>
               <span className="text-sm font-bold text-zinc-100">{streak}</span>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800/80 px-3 py-1.5 rounded-lg font-mono text-xs text-zinc-400">
+            <button 
+              onClick={toggleMute}
+              className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              title={isMuted ? "Unmute Audio" : "Mute Audio"}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <div className="bg-zinc-900 border border-zinc-800/80 px-3 py-1.5 rounded-lg font-mono text-xs text-zinc-400 hidden sm:block">
               Cycle <span className="text-zinc-100 font-bold">#{round}</span>
             </div>
           </div>
@@ -397,6 +421,29 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
                   </div>
                 );
               })()}
+
+              {/* Psychological Evaluation (Gemini) */}
+              <div className="glass-panel p-6 rounded-2xl border-zinc-800 bg-zinc-950/80">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-zinc-300 font-mono tracking-widest uppercase flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-indigo-400" />
+                    Psychological Profiling
+                  </h3>
+                  <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-950/40 text-indigo-400 border border-indigo-500/20">
+                    Gemini API Analysis
+                  </span>
+                </div>
+                {evaluationText ? (
+                  <p className="text-sm text-zinc-300 leading-relaxed italic border-l-2 border-indigo-500/40 pl-4 py-1">
+                    "{evaluationText}"
+                  </p>
+                ) : (
+                  <div className="flex items-center gap-2 text-zinc-500 font-mono text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    Generating cognitive evaluation...
+                  </div>
+                )}
+              </div>
 
               {/* Reveal Grid */}
               <div>

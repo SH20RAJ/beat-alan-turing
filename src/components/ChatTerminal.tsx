@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { useSound } from '../context/SoundContext';
 import { CharacterCard } from './CharacterCard';
 import { Send, Cpu, Network, CornerDownLeft, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,8 @@ export const ChatTerminal: React.FC = () => {
     questionsLeft,
     isGeminiActive
   } = useGame();
+
+  const { playKeyClick, playTerminalStart } = useSound();
 
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -65,6 +68,13 @@ export const ChatTerminal: React.FC = () => {
       </span>
     );
   };
+
+  // Play startup sound when switching characters
+  useEffect(() => {
+    if (activeCharacterId) {
+      playTerminalStart();
+    }
+  }, [activeCharacterId, playTerminalStart]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -193,7 +203,10 @@ export const ChatTerminal: React.FC = () => {
               <input
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  playKeyClick();
+                }}
                 placeholder={`Ask ${activeRoundChar.character.name} something... (e.g. "Who are you?", "Prove you are human")`}
                 disabled={isThinking}
                 className="w-full glass-input rounded-xl pl-4 pr-24 py-3.5 text-sm font-mono text-zinc-200"

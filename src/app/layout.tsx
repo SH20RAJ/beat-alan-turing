@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { GameProvider } from "@/context/GameContext";
+import { SoundProvider } from "@/context/SoundContext";
 
 export const metadata: Metadata = {
   title: "Can You Beat Alan Turing? | June Solstice Game Jam",
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased dark">
       <body className="min-h-full flex flex-col solstice-bg-gradient scanline-container relative">
-        <GameProvider>
-          {children}
-        </GameProvider>
+        <SoundProvider>
+          <GameProvider>
+            {children}
+          </GameProvider>
+        </SoundProvider>
       </body>
     </html>
   );

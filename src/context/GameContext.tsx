@@ -41,7 +41,8 @@ interface GameContextType {
   analyzeCognitiveSignature: () => Promise<void>;
   setUserAccusation: (characterId: string, status: 'human' | 'ai' | null) => void;
   updateNotes: (characterId: string, notes: string) => void;
-  submitJudgement: () => void;
+  evaluationText: string | null;
+  submitJudgement: () => Promise<void>;
   nextRound: () => void;
   resetGame: () => void;
 }
@@ -56,8 +57,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [highScore, setHighScore] = useState(0);
   const [questionsLeft, setQuestionsLeft] = useState(10);
   const maxQuestions = 10;
-  
   const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
+  const [evaluationText, setEvaluationText] = useState<string | null>(null);
   const [roundCharacters, setRoundCharacters] = useState<RoundCharacter[]>([]);
   const [chatHistories, setChatHistories] = useState<Record<string, ChatMessage[]>>({});
   const [isGeminiActive, setIsGeminiActive] = useState(false);
@@ -183,7 +184,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const sendMessage = async (content: string) => {
-    if (!activeCharacterId || questionsLeft <= 0 || isThinking) return;
+    if (!activeCharacterId || isThinking) return;
+
+    // The ENIGMA Easter Egg
+    if (content.trim().toLowerCase() === '/enigma') {
+      const currentHistory = chatHistories[activeCharacterId] || [];
+      setQuestionsLeft(prev => prev + 5);
+      setChatHistories(prev => ({
+        ...prev,
+        [activeCharacterId]: [
+          ...currentHistory,
+          { role: 'user', content: '/enigma', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+          { role: 'assistant', content: '[SYSTEM OVERRIDE: ENIGMA PROTOCOL ACCEPTED. +5 TRANSMISSIONS GRANTED.]', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]
+      }));
+      return;
+    }
+
+    if (questionsLeft <= 0) return;
 
     const currentHistory = chatHistories[activeCharacterId] || [];
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -305,7 +323,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const submitJudgement = () => {
+  const submitJudgement = async () => {
+    setIsThinking(true);
+    setEvaluationText(null);
+
     // Scoring logic
     let correctCount = 0;
     roundCharacters.forEach(rc => {
@@ -341,18 +362,52 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (newScore > highScore) {
       setHighScore(newScore);
-      localStorage.setItem('turing_high_score', newScore.toString());
     }
 
-    // Throw confetti on perfect score
+    // Trigger fireworks if perfect
     if (isAllCorrect) {
       confetti({
         particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#f59e0b', '#10b981', '#3b82f6'] // amber, emerald, blue
       });
     }
 
+    // Fetch psychological evaluation
+    if (isGeminiActive) {
+      try {
+        const notesData = roundCharacters.map(rc => ({
+          characterName: rc.character.name,
+          actualIdentity: rc.assignedIdentity,
+          guessedIdentity: rc.userAccusation,
+          notes: rc.notes
+        }));
+
+        const response = await fetch('/api/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ score: pointsGained, isAllCorrect, notesData })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setEvaluationText(data.evaluation);
+        } else {
+          setEvaluationText("Signal lost. Psychological profiling unavailable.");
+        }
+      } catch (e) {
+        setEvaluationText("System error during evaluation parsing.");
+      }
+    } else {
+      setEvaluationText(
+        isAllCorrect 
+          ? "Local simulation results confirm high deductive accuracy. Notes indicate standard logical paths."
+          : "Local simulation detected cognitive bias. Review your analytical methodology."
+      );
+    }
+
+    setIsThinking(false);
     setScreen('results');
   };
 
@@ -384,6 +439,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isGeminiActive,
       isThinking,
       gameStartTime,
+      evaluationText,
       setScreen,
       startGame,
       startRound,
