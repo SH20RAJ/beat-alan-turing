@@ -22,7 +22,8 @@ import {
   Cpu,
   User,
   Heart,
-  Brain
+  Brain,
+  Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
@@ -108,11 +109,11 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
   };
 
   return (
-    <div className={`min-h-screen flex flex-col justify-between transition-colors duration-1000 bg-gradient-to-tr ${getSolsticeThemeClass()} py-6 px-4 md:px-8 max-w-7xl mx-auto w-full`}>
+    <div className={`min-h-screen flex flex-col justify-between transition-colors duration-1000 bg-gradient-to-tr ${getSolsticeThemeClass()} py-6 px-4 md:px-8 w-full`}>
       
       {/* 1. HEADER (Renders on game screens) */}
       {screen !== 'landing' && screen !== 'story' && (
-        <header className="flex flex-col sm:flex-row justify-between items-center border-b border-zinc-800/80 pb-4 mb-6 gap-4">
+        <header className="flex flex-col sm:flex-row justify-between items-center border-b border-zinc-800/80 pb-4 mb-6 gap-4 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/10">
               <Sun className="w-5 h-5 text-zinc-950" />
@@ -149,7 +150,7 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
       )}
 
       {/* 2. MAIN SCREENS CONTENT */}
-      <main className="flex-1 flex flex-col justify-center my-4">
+      <main className="flex-1 flex flex-col justify-center my-4 max-w-7xl mx-auto w-full">
         <AnimatePresence mode="wait">
           
           {/* LANDING SCREEN */}
@@ -486,6 +487,13 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
                   </div>
                   <div className="flex gap-4 mt-6">
                     <button
+                      onClick={() => window.print()}
+                      className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-indigo-400 font-bold p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                      title="Print Verification Certificate"
+                    >
+                      <Printer className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={nextRound}
                       className="flex-1 bg-amber-500 text-zinc-950 font-bold py-3 px-4 rounded-xl font-mono text-xs uppercase flex items-center justify-center gap-1.5 hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/10 cursor-pointer"
                     >
@@ -510,7 +518,7 @@ AS THE TRANSMISSIONS DECREASE, THE SUN WILL SET, AND SHADOWS WILL STRETCH. TRUST
       </main>
 
       {/* 3. FOOTER */}
-      <footer className="mt-8 border-t border-zinc-900/60 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-zinc-600 font-mono gap-2">
+      <footer className="mt-8 border-t border-zinc-900/60 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-zinc-600 font-mono gap-2 max-w-7xl mx-auto w-full">
         <div>
           &copy; 2026 June Solstice Game Jam.
         </div>
