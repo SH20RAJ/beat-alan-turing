@@ -14,7 +14,7 @@ interface SoundContextType {
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isMuted, setIsMuted] = useState(true); // Default to muted for auto-play policy
+  const [isMuted, setIsMuted] = useState(false); // Default to ON
   const audioCtxRef = useRef<AudioContext | null>(null);
   const droneOscillatorRef = useRef<OscillatorNode | null>(null);
   const droneGainRef = useRef<GainNode | null>(null);
@@ -45,6 +45,23 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else if (!isMuted && audioCtxRef.current) {
       audioCtxRef.current.resume();
     }
+  }, [isMuted]);
+
+  // Handle browser auto-play policy by resuming AudioContext on first interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended' && !isMuted) {
+        audioCtxRef.current.resume();
+      }
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+    };
   }, [isMuted]);
 
   const playKeyClick = () => {
