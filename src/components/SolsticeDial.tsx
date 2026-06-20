@@ -12,7 +12,7 @@ export const SolsticeDial: React.FC = () => {
   const percentage = questionsLeft / maxQuestions; // 1.0 down to 0.0
   
   // Calculate angles for the sun
-  // Noon (10 questions left) starts at 90 degrees (zenith)
+  // Noon (maxQuestions left) starts at 90 degrees (zenith)
   // Sunset (0 questions left) goes down to -90 degrees (horizon)
   const angle = 90 - (1.0 - percentage) * 180; // 90 down to -90
   const angleRad = (angle * Math.PI) / 180;
@@ -79,15 +79,15 @@ export const SolsticeDial: React.FC = () => {
           />
           
           {/* Hour markers */}
-          {Array.from({ length: 11 }).map((_, i) => {
-            const tickAngle = 180 - (i * 18);
+          {Array.from({ length: maxQuestions + 1 }).map((_, i) => {
+            const tickAngle = 180 - (i * (180 / maxQuestions));
             const tickAngleRad = (tickAngle * Math.PI) / 180;
             const x1 = 100 + 66 * Math.cos(tickAngleRad);
             const y1 = 100 - 66 * Math.sin(tickAngleRad);
             const x2 = 100 + 74 * Math.cos(tickAngleRad);
             const y2 = 100 - 74 * Math.sin(tickAngleRad);
             
-            const isCompleted = (10 - i) > questionsLeft;
+            const isCompleted = (maxQuestions - i) > questionsLeft;
             
             return (
               <line
